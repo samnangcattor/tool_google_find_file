@@ -16,7 +16,7 @@ class ToolsController < ApplicationController
     service.client_options.application_name = APPLICATION_NAME
     service.authorization = authorize user_emails, email
     if user_emails.include? email
-      @file_informations = Tool.get_list_files service
+      @file_informations = Tool.email_role_file service, email
       render :index
     end
   end
@@ -32,7 +32,7 @@ class ToolsController < ApplicationController
     credentials = authorizer.get_credentials user_id
     code = params[:code]
     credentials = authorizer.get_and_store_credentials_from_code user_id: user_id, code: code, base_url: OOB_URI
-    redirect_to tools_path
+    redirect_to tools_path(email: user.email)
   end
 
   private
