@@ -1,65 +1,51 @@
 class ToolsController < ApplicationController
+  skip_before_filter :verify_authenticity_token
+
+  APPLICATION_NAME= "Moviehdkh"
   OOB_URI = "http://localhost:3000/oauth2callback"
-  APPLICATION_NAME = "Moviehdkh"
-  CLIENT_SECRETS_PATH = "lib/google_drive/client_secret.json"
   SCOPE = ["https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/drive.appdata", "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/drive.metadata", "https://www.googleapis.com/auth/drive.metadata.readonly", "https://www.googleapis.com/auth/drive.photos.readonly",
     "https://www.googleapis.com/auth/drive.readonly"]
 
   def index
-    email = params[:email]
-    @file_informations = if email.present?
-      user_emails = User.all.map &:email
-      service = Google::Apis::DriveV3::DriveService.new
-      service.client_options.application_name = APPLICATION_NAME
-      service.authorization = authorize user_emails, email
-      Tool.email_role_file service, email
+    code = params[:code]
+    audience = "12448024383-ebq94frerts9fd64sascbau3ro7mvo5p.apps.googleusercontent.com"
+    validator = GoogleIDToken::Validator.new
+    claim = validator.check(params["id_token"], audience, audience)
+    if claim
+      session[:user_id] = claim["sub"]
+      session[:user_email] = claim["email"]
+      200
+    else
+      401
     end
   end
 
   def create
     email = params[:email]
-    user_emails = User.all.map &:email
     service = Google::Apis::DriveV3::DriveService.new
     service.client_options.application_name = APPLICATION_NAME
-    service.authorization = authorize user_emails, email
-    if user_emails.include? email
-      @file_informations = Tool.email_role_file service, email
-      render :index
-    end
+    service.authorization = authorize
+    @file_informations = Tool.email_role_file service, email
+    render :index
   end
 
   def update
-    user = User.last
-    user_id = user.id
-    file_yaml = "tool-#{user_id}.yaml"
-    credentials_path = File.join("lib/google_drive/", ".credentials", file_yaml)
-    client_id = Google::Auth::ClientId.from_file CLIENT_SECRETS_PATH
-    token_store = Google::Auth::Stores::FileTokenStore.new file: credentials_path
-    authorizer = Google::Auth::UserAuthorizer.new client_id, SCOPE, token_store
-    credentials = authorizer.get_credentials user_id
-    code = params[:code]
-    credentials = authorizer.get_and_store_credentials_from_code user_id: user_id, code: code, base_url: OOB_URI
-    redirect_to tools_path(email: user.email)
+    target_url = Google::Auth::WebUserAuthorizer.handle_auth_callback_deferred(request)
+    redirect_to target_url
   end
 
   private
-  def authorize user_emails, email
-    unless user_emails.include? email
-      User.create email: email
-    end
-    user = User.find_by email: email
-    user_id = user.id
-    file_yaml = "tool-#{user_id}.yaml"
-    credentials_path = File.join "lib/google_drive/", ".credentials", file_yaml
-    FileUtils.mkdir_p File.dirname(credentials_path)
-    client_id = Google::Auth::ClientId.from_file CLIENT_SECRETS_PATH
-    token_store = Google::Auth::Stores::FileTokenStore.new file: credentials_path
-    authorizer = Google::Auth::UserAuthorizer.new client_id, SCOPE, token_store
-    credentials = authorizer.get_credentials user_id
+  def authorize
+    client_id = Google::Auth::ClientId.new "12448024383-ebq94frerts9fd64sascbau3ro7mvo5p.apps.googleusercontent.com",
+      "Az9t7R4-eica4UqShTHSelUM"
+    token_store = Google::Auth::Stores::RedisTokenStore.new(redis: Redis.new)
+    authorizer = Google::Auth::WebUserAuthorizer.new client_id, SCOPE, token_store
+    user_id = session[:user_id]
+    redirect_to "/" if user_id.nil?
+    credentials = authorizer.get_credentials user_id, request
     if credentials.nil?
-      url = authorizer.get_authorization_url base_url: OOB_URI
-      redirect_to url
+      redirect_to authorizer.get_authorization_url(login_hint: user_id, request: request)
     end
     credentials
   end
