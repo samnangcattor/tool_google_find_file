@@ -7,6 +7,14 @@ class ToolsController < ApplicationController
     "https://www.googleapis.com/auth/drive.readonly"]
 
   def index
+    email = params[:email]
+    @file_informations = if email.present?
+      user_emails = User.all.map &:email
+      service = Google::Apis::DriveV2::DriveService.new
+      service.client_options.application_name = APPLICATION_NAME
+      service.authorization = authorize user_emails, email
+      Tool.email_role_file service, email
+    end
   end
 
   def create
