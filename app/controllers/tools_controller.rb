@@ -10,7 +10,7 @@ class ToolsController < ApplicationController
     email = params[:email]
     @file_informations = if email.present?
       user_emails = User.all.map &:email
-      service = Google::Apis::DriveV2::DriveService.new
+      service = Google::Apis::DriveV3::DriveService.new
       service.client_options.application_name = APPLICATION_NAME
       service.authorization = authorize user_emails, email
       Tool.email_role_file service, email
@@ -20,7 +20,7 @@ class ToolsController < ApplicationController
   def create
     email = params[:email]
     user_emails = User.all.map &:email
-    service = Google::Apis::DriveV2::DriveService.new
+    service = Google::Apis::DriveV3::DriveService.new
     service.client_options.application_name = APPLICATION_NAME
     service.authorization = authorize user_emails, email
     if user_emails.include? email
