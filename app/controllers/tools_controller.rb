@@ -15,8 +15,10 @@ class ToolsController < ApplicationController
     service = Google::Apis::DriveV2::DriveService.new
     service.client_options.application_name = APPLICATION_NAME
     service.authorization = authorize user_emails, email
-    @file_informations = Tool.get_list_files service
-    render :index
+    if user_emails.include? email
+      @file_informations = Tool.get_list_files service
+      render :index
+    end
   end
 
   def update
