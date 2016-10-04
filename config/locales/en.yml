@@ -1,0 +1,8 @@
+en:
+  hello: "Hello world"
+  headers:
+    number: "#"
+    title: "Title"
+    id: "Id"
+    link: "Link"
+    permission_member: "Permission file member"

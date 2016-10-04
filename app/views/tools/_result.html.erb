@@ -1,0 +1,20 @@
+<div class="container">
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      <tbody>
+        <tr>
+          <th>Title</th>
+          <th>Link File</th>
+        </tr>
+      </tbody>
+      <tbody>
+        <% @file_informations.each do |file| %>
+          <tr>
+            <th><%= file[:title] %></th>
+            <th><%= link_to file[:alert_link], file[:alert_link] %></th>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
