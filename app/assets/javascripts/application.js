@@ -15,8 +15,8 @@
 //= require turbolinks
 //= require bootstrap-sprockets
 //= require_tree .
-$(function() {
-  function onSignIn(googleUser) {
+
+function onSignIn(googleUser) {
   var id_token = googleUser.getAuthResponse().id_token;
   var formData = new FormData();
   formData.append("id_token", id_token);
@@ -31,5 +31,5 @@ $(function() {
   });
     req.open("POST", "/signin");
     req.send(formData);
-  }
-});
+}
+
