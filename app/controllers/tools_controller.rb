@@ -6,18 +6,33 @@ class ToolsController < ApplicationController
   SCOPE = "https://www.googleapis.com/auth/drive"
 
   def index
-    service = Google::Apis::DriveV3::DriveService.new
-    service.client_options.application_name = APPLICATION_NAME
-    service.authorization = authorize
+    code = params[:code]
+    if code.present?
+      email = params[:email]
+      service = Google::Apis::DriveV3::DriveService.new
+      service.client_options.application_name = APPLICATION_NAME
+      author = authorize
+      service.authorization = author[:credentials]
+      @file_informations = Tool.email_role_file service, email
+    end
   end
 
   def create
     email = params[:email]
+    user_id = session["session_id"]
     service = Google::Apis::DriveV3::DriveService.new
     service.client_options.application_name = APPLICATION_NAME
-    service.authorization = authorize
-    @file_informations = Tool.email_role_file service, email
-    render :index
+    author = authorize
+    if author[:credentials].present?
+      service.authorization = author[:credentials]
+      @file_informations = Tool.email_role_file service, email
+      render :index
+    else
+      redis = Redis.new
+      redis.set user_id, email
+      url = author[:url]
+      redirect_to url
+    end
   end
 
   def update
@@ -26,11 +41,13 @@ class ToolsController < ApplicationController
       client_id = Google::Auth::ClientId.from_file CLIENT_SECRETS_PATH
       token_store = Google::Auth::Stores::RedisTokenStore.new(redis: Redis.new)
       authorizer = Google::Auth::UserAuthorizer.new client_id, SCOPE, token_store
-      user_id = "default"
+      redis = Redis.new
+      user_id = session["session_id"]
       credentials = authorizer.get_credentials user_id
       credentials = authorizer.get_and_store_credentials_from_code user_id: user_id, code: code, base_url: OOB_URI
+      email = redis.get user_id
     end
-    redirect_to tools_path(code: code)
+    redirect_to tools_path(code: code, email: email)
   end
 
   private
@@ -38,12 +55,9 @@ class ToolsController < ApplicationController
     client_id = Google::Auth::ClientId.from_file CLIENT_SECRETS_PATH
     token_store = Google::Auth::Stores::RedisTokenStore.new(redis: Redis.new)
     authorizer = Google::Auth::UserAuthorizer.new client_id, SCOPE, token_store
-    user_id = "default"
+    user_id = session["session_id"]
     credentials = authorizer.get_credentials user_id if user_id.present?
-    if credentials.nil?
-      url = authorizer.get_authorization_url base_url: OOB_URI
-      redirect_to url
-    end
-    credentials
+    url = authorizer.get_authorization_url base_url: OOB_URI
+    {"credentials": credentials, "url": url}
   end
 end
