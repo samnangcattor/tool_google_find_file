@@ -15,21 +15,3 @@
 //= require turbolinks
 //= require bootstrap-sprockets
 //= require_tree .
-
-function onSignIn(googleUser) {
-  var id_token = googleUser.getAuthResponse().id_token;
-  var formData = new FormData();
-  formData.append("id_token", id_token);
-  var req = new XMLHttpRequest();
-  req.addEventListener("load", function() {
-    console.log("Log in successful");
-    // Successful login...
-  });
-  req.addEventListener("error", function() {
-    console.log("Log in failed");
-    // Handle error...
-  });
-    req.open("POST", "/signin");
-    req.send(formData);
-}
-
