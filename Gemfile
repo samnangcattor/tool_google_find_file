@@ -11,6 +11,8 @@ gem "jquery-rails"
 gem "turbolinks", "~> 5"
 gem "jbuilder", "~> 2.5"
 gem "google-api-client"
+gem "redis"
+gem "google-id-token"
 
 group :development do
   gem "pry"
