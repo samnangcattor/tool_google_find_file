@@ -13,6 +13,7 @@ gem "google-api-client"
 gem "redis"
 gem "google-id-token"
 gem "pg"
+gem "sinatra"
 
 gem 'rails_12factor', group: :production
 
