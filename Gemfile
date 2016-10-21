@@ -13,6 +13,7 @@ gem "jbuilder", "~> 2.5"
 gem "google-api-client"
 gem "redis"
 gem "google-id-token"
+gem "pg"
 
 group :development do
   gem "pry"
