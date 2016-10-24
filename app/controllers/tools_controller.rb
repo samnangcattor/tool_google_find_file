@@ -1,5 +1,5 @@
 class ToolsController < ApplicationController
-  OOB_URI = "https://filegoogle.herokuapp.com/oauth2callback"
+  OOB_URI = "http://localhost:3000/oauth2callback"
   APPLICATION_NAME = "Movidhdkh"
   CLIENT_SECRETS_PATH = "lib/google_drive/client_secret.json"
   CREDENTIALS_PATH = File.join "lib/google_drive/", ".credentials", "moviehdkh-com.yaml"
