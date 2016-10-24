@@ -23,16 +23,14 @@ class ToolsController < ApplicationController
     service = Google::Apis::DriveV3::DriveService.new
     service.client_options.application_name = APPLICATION_NAME
     author = authorize
-    if author[:credentials].present?
-      service.authorization = author[:credentials]
-      @file_informations = Tool.email_role_file service, email
-      render :index
-    else
-      redis = Redis.new
-      redis.set user_id, email
-      url = author[:url]
-      redirect_to url
-    end
+    service.authorization = author[:credentials]
+    @file_informations = Tool.email_role_file service, email
+    render :index
+  rescue
+    redis = Redis.new
+    redis.set user_id, email
+    url = author[:url]
+    redirect_to url
   end
 
   def update
